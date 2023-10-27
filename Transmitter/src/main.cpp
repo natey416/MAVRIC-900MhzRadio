@@ -12,7 +12,10 @@
 #define RF95_FREQ 915.0
 RH_RF95 rf95(RFM95_CS, RFM95_INT);
 
-int drive, steer;
+struct dataStruct{
+  int drive;
+  int steer;
+}CtrlRead;
 
 void setup() {
   pinMode(RFM95_RST, OUTPUT);
@@ -46,13 +49,21 @@ void setup() {
 
 void loop() {
   while (!Serial.available());
-  drive = Serial.readString().toInt(); 
+  CtrlRead.drive = Serial.readString().toInt(); 
   while (!Serial.available());
-  steer = Serial.readString().toInt();
+  CtrlRead.steer = Serial.readString().toInt();
   
-  char buf[6] = {0};
-  itoa(drive,buf,10);
-  rf95.send((uint8_t *)buf,6);
+  rf95.send((uint8_t *)&CtrlRead, sizeof(CtrlRead));
+
+  /*
+  //test send code
+  char driveBuf[6] = {0};
+  char steerBuf[6] = {0};
+  itoa(CtrlRead.drive,driveBuf,10);
+  itoa(CtrlRead.steer,steerBuf,10);
+  rf95.send((uint8_t *)driveBuf,6);
+  rf95.send((uint8_t *)steerBuf,6);
+  */
   /*
   //for testing the serial integer data transmission
   for (int i=0; i < abs(steer); i++) {
