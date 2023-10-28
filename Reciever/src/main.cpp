@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <SPI.h>
 #include <RH_RF95.h>
+#include <SerialTransfer.h>
 
 // https://forum.arduino.cc/t/how-do-i-send-sensor-data-using-rf95-when-variables-are-in-a-struct/500286
 
@@ -11,12 +12,19 @@
 
 #define RF95_FREQ 915.0
 
+SerialTransfer roverTransfer;
+
 RH_RF95 rf95(RFM95_CS, RFM95_INT);
 
 struct dataStruct{
   float drive;
   float steer;
 }CtrlRead;
+
+struct __attribute__((packed)) STRUCT {
+  float drive;
+  float steer;
+} roverTX;
 
 void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
@@ -26,8 +34,8 @@ void setup() {
 
   Serial.begin(115200);
   while (!Serial) delay(1);
-  Serial.setTimeout(1); 
-  Serial.println("Feather LoRa RX Test!");
+  Serial.setTimeout(1);
+  roverTransfer.begin(Serial);
 
   // manual reset
   digitalWrite(RFM95_RST, LOW);
@@ -49,6 +57,8 @@ void setup() {
   rf95.setTxPower(23, false);
   CtrlRead.drive = 0;
   CtrlRead.steer = 0;
+  roverTX.drive = 0;
+  roverTX.steer = 0;
 }
 
 void loop() {
@@ -60,33 +70,20 @@ void loop() {
       digitalWrite(LED_BUILTIN, HIGH);
       memcpy(&CtrlRead, buf, sizeof(CtrlRead));
     }
-    
+    roverTX.drive = CtrlRead.drive;
+    roverTX.steer = CtrlRead.steer;
+    /*
     Serial.print("Drive: ");
     Serial.print(CtrlRead.drive,12);
     Serial.print("    ");
     Serial.print("Steer: ");
     Serial.println(CtrlRead.steer,12);
-    digitalWrite(LED_BUILTIN,LOW);
-
-
-    /*
-    uint8_t buf[RH_RF95_MAX_MESSAGE_LEN];
-    uint8_t len = sizeof(buf);
-
-    if (rf95.recv(buf, &len)) {
-      digitalWrite(LED_BUILTIN, HIGH);
-      RH_RF95::printBuffer("Received: ", buf, len);
-      Serial.print("Got: ");
-      Serial.println((char*)buf);
-      Serial.print("RSSI: ");
-      Serial.println(rf95.lastRssi(), DEC);
-      Serial.print("Size: ");
-      Serial.println(len);
-      
-      digitalWrite(LED_BUILTIN, LOW);
-    } else {
-      Serial.println("Receive failed");
-    }
     */
+    digitalWrite(LED_BUILTIN,LOW);
+    delay(0.05);
   }
+  uint16_t sendSize = 0;
+  sendSize = roverTransfer.txObj(roverTX, sendSize);
+  roverTransfer.sendData(sendSize);
+  
 }
