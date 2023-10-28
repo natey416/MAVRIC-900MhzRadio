@@ -1,5 +1,6 @@
-import serial
 import time
+import serial
+import serial.tools.list_ports
 import pygame
 import sys
 from pySerialTransfer import pySerialTransfer as txfer
@@ -7,12 +8,24 @@ from pySerialTransfer import pySerialTransfer as txfer
 # first attempt
 # https://projecthub.arduino.cc/ansh2919/serial-communication-between-python-and-arduino-663756
 
+print("Searching for COM Ports")
+ports = list(serial.tools.list_ports.comports())
+print("found ports: ")
+for p in ports:
+    print(p.device)
+
+if len(ports) > 1:
+    input = input("Which COM port do you want to use? (NUM ONLY) ")
+    port = 'COM' + input
+else:
+    port = ports[0].device
+
 pygame.init()
 pygame.joystick.init()
 
 # Screen setup
-screenSize = [800,500]
-font_size = 30
+screenSize = [400,250]
+font_size = 15
 FPS = 30
 
 # create game window
@@ -29,8 +42,8 @@ def draw_text(text, font, text_col, x, y):
 clock = pygame.time.Clock()
 drive = 0
 steer = 0
-joyposx = 400
-joyposy = 250
+joyposx = screenSize[0]/2
+joyposy = screenSize[1]/2
 # create joystick indicator 
 joyindicator = pygame.Rect(joyposx, joyposy, 10, 10)
 joyindback = pygame.Rect(joyposx-50, joyposy-50, 100, 100)
@@ -38,8 +51,6 @@ joyindback = pygame.Rect(joyposx-50, joyposy-50, 100, 100)
 col = "royalblue"
 joysticks = []
 
-
-port = 'COM3'
 class struct(object):
     drive = float
     steer = float
@@ -48,8 +59,10 @@ class struct(object):
 if __name__=='__main__':
     try:
         data = struct
+        print("Attempting to connect to: " + str(port))
         link = txfer.SerialTransfer(port)
         link.open()
+        print("Link established")
         time.sleep(1)
 
         run = True
@@ -64,8 +77,8 @@ if __name__=='__main__':
             #joystick info
             draw_text("Controllers: " + str(pygame.joystick.get_count()), font, pygame.Color("azure"), 10, 10)
             for joystick in joysticks:
-                draw_text("Controller Type: " + str(joystick.get_name()), font, pygame.Color("azure"), 10, 35)
-                draw_text("Num of Axes: " + str(joystick.get_numaxes()), font, pygame.Color("azure"), 10, 60)
+                draw_text("Controller Type: " + str(joystick.get_name()), font, pygame.Color("azure"), 10, 10+font_size)
+                draw_text("Num of Axes: " + str(joystick.get_numaxes()), font, pygame.Color("azure"), 10, 10+2*font_size)
 
             # joystick input
             for joystick in joysticks:
