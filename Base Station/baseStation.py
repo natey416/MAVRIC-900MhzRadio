@@ -50,6 +50,8 @@ joyindback = pygame.Rect(joyposx-50, joyposy-50, 100, 100)
 
 col = "royalblue"
 joysticks = []
+axis = [1,0]
+deadzone = 0.05
 
 class struct(object):
     drive = float
@@ -82,8 +84,14 @@ if __name__=='__main__':
 
             # joystick input
             for joystick in joysticks:
-                drive = joystick.get_axis(1)
-                steer = joystick.get_axis(0)
+                    if abs(joystick.get_axis(1)) > deadzone:
+                        drive = joystick.get_axis(1)
+                    else:
+                        drive = 0
+                    if abs(joystick.get_axis(0)) > deadzone:
+                        steer = joystick.get_axis(0)
+                    else:
+                        steer = 0
 
             #event handler
             for event in pygame.event.get():
