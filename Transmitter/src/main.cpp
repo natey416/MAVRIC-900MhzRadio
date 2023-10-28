@@ -13,8 +13,8 @@
 RH_RF95 rf95(RFM95_CS, RFM95_INT);
 
 struct dataStruct{
-  int drive;
-  int steer;
+  float drive;
+  float steer;
 }CtrlRead;
 
 void setup() {
@@ -49,9 +49,9 @@ void setup() {
 
 void loop() {
   while (!Serial.available());
-  CtrlRead.drive = Serial.readString().toInt(); 
+  CtrlRead.drive = Serial.parseFloat(); 
   while (!Serial.available());
-  CtrlRead.steer = Serial.readString().toInt();
+  CtrlRead.steer = Serial.parseFloat();
   
   rf95.send((uint8_t *)&CtrlRead, sizeof(CtrlRead));
 

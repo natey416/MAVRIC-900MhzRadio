@@ -14,8 +14,8 @@
 RH_RF95 rf95(RFM95_CS, RFM95_INT);
 
 struct dataStruct{
-  int drive;
-  int steer;
+  float drive;
+  float steer;
 }CtrlRead;
 
 void setup() {
@@ -61,8 +61,12 @@ void loop() {
       memcpy(&CtrlRead, buf, sizeof(CtrlRead));
     }
     
-    Serial.println("Drive: " + String(CtrlRead.drive));
-    Serial.println("Steer: " + String(CtrlRead.steer));
+    Serial.print("Drive: ");
+    Serial.print(CtrlRead.drive,12);
+    Serial.print("    ");
+    Serial.print("Steer: ");
+    Serial.println(CtrlRead.steer,12);
+    digitalWrite(LED_BUILTIN,LOW);
 
 
     /*
