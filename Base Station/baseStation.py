@@ -2,6 +2,7 @@ import serial
 import time
 import pygame
 import sys
+from pySerialTransfer import pySerialTransfer as txfer
 
 # first attempt
 # https://projecthub.arduino.cc/ansh2919/serial-communication-between-python-and-arduino-663756
@@ -12,7 +13,7 @@ pygame.joystick.init()
 # Screen setup
 screenSize = [800,500]
 font_size = 30
-FPS = 20
+FPS = 30
 
 # create game window
 screen = pygame.display.set_mode((screenSize[0],screenSize[1]))
@@ -39,51 +40,60 @@ joysticks = []
 
 
 port = 'COM3'
-baudrate = 115200
-arduino = serial.Serial(port, baudrate, timeout=.1)
-time.sleep(1)
-num = [[],[]]
-
-def send(input1,input2):
-    arduino.write(bytes(input1, 'utf-8'))
-    time.sleep(0.05)
-    arduino.write(bytes(input2, 'utf-8'))
-    time.sleep(0.05)
+class struct(object):
+    drive = float
+    steer = float
     
-run = True
-while run:
-    clock.tick(FPS)
 
-    screen.fill(pygame.Color("black"))
-    pygame.draw.rect(screen, pygame.Color("white"), joyindback)
-    joyindicator.topleft = (joyposx + 50*steer - 5, joyposy + 50*drive - 5)
-    pygame.draw.rect(screen, pygame.Color(col), joyindicator)
+if __name__=='__main__':
+    try:
+        data = struct
+        link = txfer.SerialTransfer(port)
+        link.open()
+        time.sleep(1)
 
-    #joystick info
-    draw_text("Controllers: " + str(pygame.joystick.get_count()), font, pygame.Color("azure"), 10, 10)
-    for joystick in joysticks:
-        draw_text("Controller Type: " + str(joystick.get_name()), font, pygame.Color("azure"), 10, 35)
-        draw_text("Num of Axes: " + str(joystick.get_numaxes()), font, pygame.Color("azure"), 10, 60)
+        run = True
+        while run:
+            clock.tick(FPS)
 
-    # joystick input
-    for joystick in joysticks:
-        drive = joystick.get_axis(1)
-        steer = joystick.get_axis(0)
+            screen.fill(pygame.Color("black"))
+            pygame.draw.rect(screen, pygame.Color("white"), joyindback)
+            joyindicator.topleft = (joyposx + 50*steer - 5, joyposy + 50*drive - 5)
+            pygame.draw.rect(screen, pygame.Color(col), joyindicator)
 
-    #event handler
-    for event in pygame.event.get():
-        if event.type == pygame.JOYDEVICEADDED:
-            joy = pygame.joystick.Joystick(event.device_index)
-            joysticks.append(joy)
-        if event.type == pygame.QUIT:
-            run = False
-    print(str(-1*drive) + " " + str(steer))
-    send(str(-1*drive), str(steer))
-    pygame.display.flip()
+            #joystick info
+            draw_text("Controllers: " + str(pygame.joystick.get_count()), font, pygame.Color("azure"), 10, 10)
+            for joystick in joysticks:
+                draw_text("Controller Type: " + str(joystick.get_name()), font, pygame.Color("azure"), 10, 35)
+                draw_text("Num of Axes: " + str(joystick.get_numaxes()), font, pygame.Color("azure"), 10, 60)
 
-           
-pygame.quit()
-sys.exit()    
+            # joystick input
+            for joystick in joysticks:
+                drive = joystick.get_axis(1)
+                steer = joystick.get_axis(0)
+
+            #event handler
+            for event in pygame.event.get():
+                if event.type == pygame.JOYDEVICEADDED:
+                    joy = pygame.joystick.Joystick(event.device_index)
+                    joysticks.append(joy)
+                if event.type == pygame.QUIT:
+                    run = False
+                    raise KeyboardInterrupt
+
+            sendSize = 0
+            data.drive = -1*drive
+            data.steer = steer
+
+            sendSize = link.tx_obj(data.drive, start_pos=sendSize)
+            sendSize = link.tx_obj(data.steer, start_pos=sendSize)
+            link.send(sendSize)
+            pygame.display.flip()
+    except KeyboardInterrupt:
+        pygame.quit()
+        link.close()
+        print("Goodbye!")
+        sys.exit()    
 '''
 drive = input("Enter first number: ") # Taking input from user 
 steer = input("Enter second number: ")

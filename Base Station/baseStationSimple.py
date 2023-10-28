@@ -1,28 +1,34 @@
-import serial
 import time
+from pySerialTransfer import pySerialTransfer as txfer
 
 # first attempt
 # https://projecthub.arduino.cc/ansh2919/serial-communication-between-python-and-arduino-663756
 
 port = 'COM3'
-baudrate = 115200
-arduino = serial.Serial(port, baudrate, timeout=.1)
-time.sleep(1)
-num = [[],[]]
 
-def send(input1,input2):
-    arduino.write(bytes(input1, 'utf-8'))
-    time.sleep(0.05)
-    arduino.write(bytes(input2, 'utf-8'))
-    time.sleep(0.05)
+class struct(object):
+    drive = float
+    steer = float
     
+if __name__ == '__main__':
+    try:
+        testStruct = struct
+        link = txfer.SerialTransfer(port)
+        link.open()
+        time.sleep(1)
+        '''
+        drive = input("Enter first number: ") # Taking input from user 
+        steer = input("Enter second number: ")
+        '''
+        while True:
+            sendSize = 0
+            testStruct.drive = 0.1258588
+            testStruct.steer = -0.125656
 
-while True:
-    '''
-    drive = input("Enter first number: ") # Taking input from user 
-    steer = input("Enter second number: ")
-    '''
-    drive = 0.1258588
-    steer = -0.125656
-    send(str(drive), str(steer)) 
+            sendSize = link.tx_obj(testStruct.drive, start_pos=sendSize)
+            sendSize = link.tx_obj(testStruct.steer, start_pos=sendSize)
+            link.send(sendSize)
+            time.sleep(1)
+    except KeyboardInterrupt:
+        link.close()
 

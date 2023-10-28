@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <SPI.h>
 #include <RH_RF95.h>
+#include <SerialTransfer.h>
 
 //defines for 32u4
 #define blinker 13
@@ -12,10 +13,21 @@
 #define RF95_FREQ 915.0
 RH_RF95 rf95(RFM95_CS, RFM95_INT);
 
+// set up serialtransfer library
+SerialTransfer myTransfer;
+
+// handle data from python in struct
+struct __attribute__((packed)) STRUCT {
+  float drive;
+  float steer;
+} pythonStruct;
+
+// handle data going to reciever in struct
 struct dataStruct{
   float drive;
   float steer;
-}CtrlRead;
+} txStruct;
+
 
 void setup() {
   pinMode(RFM95_RST, OUTPUT);
@@ -23,7 +35,8 @@ void setup() {
 
   Serial.begin(115200);
   while (!Serial) delay(1);
-  Serial.setTimeout(1); 
+  Serial.setTimeout(1);
+  myTransfer.begin(Serial);
   pinMode(blinker, OUTPUT);
 
   //forces hard reset of radio
@@ -48,14 +61,24 @@ void setup() {
 }
 
 void loop() {
-  while (!Serial.available());
-  CtrlRead.drive = Serial.parseFloat(); 
-  while (!Serial.available());
-  CtrlRead.steer = Serial.parseFloat();
-  
-  rf95.send((uint8_t *)&CtrlRead, sizeof(CtrlRead));
+  if (myTransfer.available()) {
+    uint16_t recSize = 0;
+    recSize = myTransfer.rxObj(pythonStruct, recSize);
+    txStruct.drive = pythonStruct.drive;
+    txStruct.steer = pythonStruct.steer;
+    rf95.send((uint8_t *)&txStruct, sizeof(txStruct));
+  }
+
+
 
   /*
+  //test python code
+  while (!Serial.available());
+  txStruct.drive = Serial.parseFloat(); 
+  while (!Serial.available());
+  txStruct.steer = Serial.parseFloat();
+
+
   //test send code
   char driveBuf[6] = {0};
   char steerBuf[6] = {0};
