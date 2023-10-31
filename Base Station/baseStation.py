@@ -103,7 +103,7 @@ if __name__=='__main__':
                     raise KeyboardInterrupt
 
             sendSize = 0
-            data.drive = -1*drive
+            data.drive = drive
             data.steer = steer
 
             sendSize = link.tx_obj(data.drive, start_pos=sendSize)
