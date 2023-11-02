@@ -3,6 +3,11 @@ from pySerialTransfer import pySerialTransfer as txfer
 
 port = 'COM7'
 
+drive = 0.0
+steer = 0.0
+
+deadzone = 0.1
+
 class struct(object):
     drive = float
     steer = float
@@ -26,8 +31,6 @@ if __name__=='__main__':
                 dataRX.steer = link.rx_obj(obj_type='f', start_pos=recSize)
                 recSize += txfer.STRUCT_FORMAT_LENGTHS['f']
 
-                print('drive: {}  steer: {}'.format(dataRX.drive, dataRX.steer))
-
             elif link.status < 0:
                 if link.status == txfer.CRC_ERROR:
                     print('ERROR: CRC_ERROR')
@@ -37,5 +40,12 @@ if __name__=='__main__':
                     print('ERROR: STOP_BYTE_ERROR')
                 else:
                     print('ERROR: {}'.format(link.status))
+            dataRX.drive = round(dataRX.drive, 2)
+            dataRX.steer = round(dataRX.steer, 2)
+            if abs(dataRX.drive) < deadzone:
+                dataRX.drive = 0
+            if abs(dataRX.steer) < deadzone:
+                dataRX.steer = 0
+            print("Drive: {}    Steer: {}".format(dataRX.drive,dataRX.steer))
     except KeyboardInterrupt:
         link.close()

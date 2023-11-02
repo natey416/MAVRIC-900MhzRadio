@@ -3,14 +3,10 @@
 #include <RH_RF95.h>
 #include <SerialTransfer.h>
 
+#include <Defines.c>
+
 // https://forum.arduino.cc/t/how-do-i-send-sensor-data-using-rf95-when-variables-are-in-a-struct/500286
 
-// Feather 32u4
-#define RFM95_CS   8
-#define RFM95_RST  4
-#define RFM95_INT  7
-
-#define RF95_FREQ 915.0
 
 SerialTransfer roverTransfer;
 
@@ -34,7 +30,6 @@ void setup() {
 
   Serial.begin(115200);
   while (!Serial) delay(1);
-  Serial.setTimeout(1);
   roverTransfer.begin(Serial);
 
   // manual reset
@@ -72,15 +67,14 @@ void loop() {
     }
     roverTX.drive = CtrlRead.drive;
     roverTX.steer = CtrlRead.steer;
-    /*
+  /*
     Serial.print("Drive: ");
     Serial.print(CtrlRead.drive,12);
     Serial.print("    ");
     Serial.print("Steer: ");
     Serial.println(CtrlRead.steer,12);
-    */
+  */
     digitalWrite(LED_BUILTIN,LOW);
-    delay(0.05);
   }
   uint16_t sendSize = 0;
   sendSize = roverTransfer.txObj(roverTX, sendSize);
