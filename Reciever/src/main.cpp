@@ -22,14 +22,16 @@ struct __attribute__((packed)) STRUCT {
   float steer;
 } roverTX;
 
+unsigned long time, lastTime;
+int timeouts;
+
 void setup() {
-  pinMode(LED_BUILTIN, OUTPUT);
+  pinMode(BLINKER, OUTPUT);
   pinMode(RFM95_RST, OUTPUT);
   digitalWrite(RFM95_RST, HIGH);
   delay(100);
 
   Serial.begin(115200);
-  while (!Serial) delay(1);
   roverTransfer.begin(Serial);
 
   // manual reset
@@ -57,6 +59,7 @@ void setup() {
 }
 
 void loop() {
+  time = millis();
   if (rf95.available()) {
     uint8_t buf[RH_RF95_MAX_MESSAGE_LEN];
     uint8_t len = sizeof(buf);
@@ -64,9 +67,20 @@ void loop() {
     if (rf95.recv(buf, &len)) {
       digitalWrite(LED_BUILTIN, HIGH);
       memcpy(&CtrlRead, buf, sizeof(CtrlRead));
+      roverTX.drive = CtrlRead.drive;
+      roverTX.steer = CtrlRead.steer;
+      lastTime = millis();
+      timeouts = 0;
     }
-    roverTX.drive = CtrlRead.drive;
-    roverTX.steer = CtrlRead.steer;
+  }
+  if(time - lastTime > TIMEOUT) {
+    timeouts = timeouts + 1;
+  }
+  if (timeouts > MAX_TIMEOUTS) {
+    roverTX.drive = 0.00;
+    roverTX.steer = 0.00;
+    digitalWrite(BLINKER,LOW);
+  }
   /*
     Serial.print("Drive: ");
     Serial.print(CtrlRead.drive,12);
@@ -74,10 +88,8 @@ void loop() {
     Serial.print("Steer: ");
     Serial.println(CtrlRead.steer,12);
   */
-    digitalWrite(LED_BUILTIN,LOW);
-  }
-  uint16_t sendSize = 0;
-  sendSize = roverTransfer.txObj(roverTX, sendSize);
-  roverTransfer.sendData(sendSize);
-  
+
+    uint16_t sendSize = 0;
+    sendSize = roverTransfer.txObj(roverTX, sendSize);
+    roverTransfer.sendData(sendSize);
 }

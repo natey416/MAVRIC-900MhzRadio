@@ -1,7 +1,7 @@
 import time
 from pySerialTransfer import pySerialTransfer as txfer
 
-port = 'COM7'
+port = 'COM8'
 
 drive = 0.0
 steer = 0.0
@@ -19,6 +19,9 @@ if __name__=='__main__':
         link = txfer.SerialTransfer(port)
         link.open()
         print("Connected to {}".format(port))
+
+        dataRX.drive = 0
+        dataRX.steer = 0
         time.sleep(1)
 
         while True:
