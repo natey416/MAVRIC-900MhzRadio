@@ -3,7 +3,7 @@
 #include <RH_RF95.h>
 #include <SerialTransfer.h>
 
-#include <Defines.c>
+#include <Defines.h>
 
 // https://forum.arduino.cc/t/how-do-i-send-sensor-data-using-rf95-when-variables-are-in-a-struct/500286
 

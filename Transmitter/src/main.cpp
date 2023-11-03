@@ -2,7 +2,7 @@
 #include <SPI.h>
 #include <RH_RF95.h>
 
-#include <Defines.c>
+#include <Defines.h>
 
 RH_RF95 rf95(RFM95_CS, RFM95_INT);
 
@@ -35,7 +35,7 @@ void setup() {
   digitalWrite(RFM95_RST, HIGH);
 
   Serial.begin(115200);
-  pinMode(blinker, OUTPUT);
+  pinMode(BLINKER, OUTPUT);
   pinMode(joyXpin, INPUT);
   pinMode(joyYpin, INPUT);
   pinMode(mode, INPUT_PULLUP);
