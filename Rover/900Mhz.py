@@ -1,7 +1,7 @@
 import time
 from pySerialTransfer import pySerialTransfer as txfer
 
-port = 'COM8'
+port = 'COM7'
 
 drive = 0.0
 steer = 0.0
@@ -11,6 +11,7 @@ deadzone = 0.1
 class struct(object):
     drive = float
     steer = float
+    mode = float
 
 if __name__=='__main__':
     try:
@@ -22,9 +23,11 @@ if __name__=='__main__':
 
         dataRX.drive = 0
         dataRX.steer = 0
+        dataRX.mode = 0
         time.sleep(1)
+        Loop = True
 
-        while True:
+        while Loop:
             if link.available():
                 recSize = 0
 
@@ -34,6 +37,8 @@ if __name__=='__main__':
                 dataRX.steer = link.rx_obj(obj_type='f', start_pos=recSize)
                 recSize += txfer.STRUCT_FORMAT_LENGTHS['f']
 
+                dataRX.mode = link.rx_obj(obj_type='f', start_pos=recSize)
+                recSize += txfer.STRUCT_FORMAT_LENGTHS['f']
             elif link.status < 0:
                 if link.status == txfer.CRC_ERROR:
                     print('ERROR: CRC_ERROR')
@@ -49,6 +54,7 @@ if __name__=='__main__':
                 dataRX.drive = 0
             if abs(dataRX.steer) < deadzone:
                 dataRX.steer = 0
-            print("Drive: {}    Steer: {}".format(dataRX.drive,dataRX.steer))
+            print("Drive: {}    Steer: {}    Mode: {}".format(dataRX.drive,dataRX.steer,dataRX.mode))
     except KeyboardInterrupt:
         link.close()
+        Loop = False
