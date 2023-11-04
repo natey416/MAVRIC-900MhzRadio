@@ -94,6 +94,6 @@ void loop() {
   */
 
   txStruct.drive = joyX;
-  txStruct.steer = joyY;
+  txStruct.steer = -1*joyY;
   rf95.send((uint8_t *)&txStruct, sizeof(txStruct));
 }
