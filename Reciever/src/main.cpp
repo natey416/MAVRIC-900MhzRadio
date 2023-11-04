@@ -15,11 +15,13 @@ RH_RF95 rf95(RFM95_CS, RFM95_INT);
 struct dataStruct{
   float drive;
   float steer;
+  int mode;
 }CtrlRead;
 
 struct __attribute__((packed)) STRUCT {
   float drive;
   float steer;
+  float mode;
 } roverTX;
 
 unsigned long time, lastTime;
@@ -54,8 +56,10 @@ void setup() {
   rf95.setTxPower(23, false);
   CtrlRead.drive = 0;
   CtrlRead.steer = 0;
+  CtrlRead.mode = 0;
   roverTX.drive = 0;
   roverTX.steer = 0;
+  roverTX.mode = 0;
 }
 
 void loop() {
@@ -69,6 +73,7 @@ void loop() {
       memcpy(&CtrlRead, buf, sizeof(CtrlRead));
       roverTX.drive = CtrlRead.drive;
       roverTX.steer = CtrlRead.steer;
+      roverTX.mode = CtrlRead.mode;
       lastTime = millis();
       timeouts = 0;
     }
@@ -79,6 +84,7 @@ void loop() {
   if (timeouts > MAX_TIMEOUTS) {
     roverTX.drive = 0.00;
     roverTX.steer = 0.00;
+    roverTX.mode = 0.00;
     digitalWrite(BLINKER,LOW);
   }
   /*
