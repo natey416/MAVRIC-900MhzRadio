@@ -3,6 +3,7 @@
 
 
 #define BOARD BOARD_32U4 //BOARD_M0
+//#define BOARD BOARD_M0
 
 //defines for all boards
 #if BOARD == BOARD_32U4 
