@@ -15,7 +15,7 @@ RH_RF95 rf95(RFM95_CS, RFM95_INT);
 struct dataStruct{
   float drive;
   float steer;
-  int mode;
+  float mode;
 }CtrlRead;
 
 struct __attribute__((packed)) STRUCT {
