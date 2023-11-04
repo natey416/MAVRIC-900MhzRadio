@@ -12,7 +12,7 @@
     #define RFM95_INT  7
     #define joyXpin A0
     #define joyYpin A1
-    #define mode 5
+    #define modeSW 5
 #elif BOARD == BOARD_M0 
     #define BLINKER 13
     #define RFM95_CS 8
@@ -20,5 +20,5 @@
     #define RFM95_INT 3
     #define joyXpin A0
     #define joyYpin A1
-    #define mode 5
+    #define modeSW 5
 #endif

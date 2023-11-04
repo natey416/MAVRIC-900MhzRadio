@@ -10,10 +10,12 @@ RH_RF95 rf95(RFM95_CS, RFM95_INT);
 struct dataStruct{
   float drive;
   float steer;
+  int mode;
 } txStruct;
 
 float joyX, joyY;
 float JOYDEADZONE;
+int modeSWout;
 
 float joyFilter(float val) {
   float newval;
@@ -38,7 +40,7 @@ void setup() {
   pinMode(BLINKER, OUTPUT);
   pinMode(joyXpin, INPUT);
   pinMode(joyYpin, INPUT);
-  pinMode(mode, INPUT_PULLUP);
+  pinMode(modeSW, INPUT_PULLUP);
 
   //forces hard reset of radio
   digitalWrite(RFM95_RST, LOW);
@@ -59,6 +61,7 @@ void setup() {
 
   txStruct.drive = 0.0;
   txStruct.steer = 0.0;
+  txStruct.mode = 0;
 
   JOYDEADZONE = 0.05;
 
@@ -69,6 +72,17 @@ void setup() {
 void loop() {
   joyX = (analogRead(joyXpin)-500.0)/500.0;
   joyY = (analogRead(joyYpin)-500.0)/500.0;
+  modeSWout = digitalRead(modeSW);
+  if (modeSWout == 0) {
+    txStruct.mode += 1;
+    if (txStruct.mode > 1) {
+      txStruct.mode = 0;
+    }
+    while (modeSWout == 0) {
+      modeSWout = digitalRead(modeSW);
+    }
+  }
+
 
   joyX = joyFilter(joyX);
   joyY = joyFilter(joyY);
