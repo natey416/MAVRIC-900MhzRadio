@@ -10,7 +10,7 @@ RH_RF95 rf95(RFM95_CS, RFM95_INT);
 struct dataStruct{
   float drive;
   float steer;
-  int mode;
+  float mode;
 } txStruct;
 
 float joyX, joyY;
@@ -74,9 +74,9 @@ void loop() {
   joyY = (analogRead(joyYpin)-500.0)/500.0;
   modeSWout = digitalRead(modeSW);
   if (modeSWout == 0) {
-    txStruct.mode += 1;
+    txStruct.mode += 1.0;
     if (txStruct.mode > 1) {
-      txStruct.mode = 0;
+      txStruct.mode = 0.00;
     }
     while (modeSWout == 0) {
       modeSWout = digitalRead(modeSW);
