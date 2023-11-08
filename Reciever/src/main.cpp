@@ -7,23 +7,25 @@
 
 // https://forum.arduino.cc/t/how-do-i-send-sensor-data-using-rf95-when-variables-are-in-a-struct/500286
 
-
+// setup radio and serialtransfer objects
 SerialTransfer roverTransfer;
-
 RH_RF95 rf95(RFM95_CS, RFM95_INT);
 
+// struct for recieving data from transmitter
 struct dataStruct{
   float drive;
   float steer;
   float mode;
 }CtrlRead;
 
+// struct for sending data to jetson
 struct __attribute__((packed)) STRUCT {
   float drive;
   float steer;
   float mode;
 } roverTX;
 
+// timeout variable declarations
 unsigned long time, lastTime;
 int timeouts;
 
@@ -34,9 +36,9 @@ void setup() {
   delay(100);
 
   Serial.begin(115200);
-  roverTransfer.begin(Serial);
+  roverTransfer.begin(Serial);  // start serialtransfer library on Serial object
 
-  // manual reset
+  // manual reset for LoRa
   digitalWrite(RFM95_RST, LOW);
   delay(10);
   digitalWrite(RFM95_RST, HIGH);
@@ -63,24 +65,27 @@ void setup() {
 }
 
 void loop() {
-  time = millis();
-  if (rf95.available()) {
+  time = millis();  // set current Beginning Of Cycle Time
+  if (rf95.available()) { // checks if there is a new message ready for "depacketing"
     uint8_t buf[RH_RF95_MAX_MESSAGE_LEN];
     uint8_t len = sizeof(buf);
 
-    if (rf95.recv(buf, &len)) {
+    if (rf95.recv(buf, &len)) { // read values to struct
       digitalWrite(LED_BUILTIN, HIGH);
       memcpy(&CtrlRead, buf, sizeof(CtrlRead));
       roverTX.drive = CtrlRead.drive;
       roverTX.steer = CtrlRead.steer;
       roverTX.mode = CtrlRead.mode;
-      lastTime = millis();
-      timeouts = 0;
+      lastTime = millis();  // reset last recieved message timestamp
+      timeouts = 0; //reset timeout counter
     }
   }
+  // if the time between last message and current time is
+  // greater than timeout, add a timeout occurance
   if(time - lastTime > TIMEOUT) {
     timeouts = timeouts + 1;
   }
+  // if too many timeouts occur, set all outputs to zero
   if (timeouts > MAX_TIMEOUTS) {
     roverTX.drive = 0.00;
     roverTX.steer = 0.00;
@@ -88,13 +93,14 @@ void loop() {
     digitalWrite(BLINKER,LOW);
   }
   /*
+    // test code to print recieved values
     Serial.print("Drive: ");
     Serial.print(CtrlRead.drive,12);
     Serial.print("    ");
     Serial.print("Steer: ");
     Serial.println(CtrlRead.steer,12);
   */
-
+    // transfer recieved struct to serialtransfer library
     uint16_t sendSize = 0;
     sendSize = roverTransfer.txObj(roverTX, sendSize);
     roverTransfer.sendData(sendSize);
