@@ -4,6 +4,7 @@
 #include <WiiChuck.h>
 #include <Defines.h>
 
+// setup radio and nunchuck objects
 RH_RF95 rf95(RFM95_CS, RFM95_INT);
 Accessory nunchuck1;
 int CONTROLLER = 0;
@@ -15,10 +16,20 @@ struct dataStruct{
   float mode;
 } txStruct;
 
+// declare joystick variables
 float joyX, joyY;
 float JOYDEADZONE;
 int modeSWout;
 
+/*
+Function joyFilter()
+  Input: Float value to be filtered
+  Output: Filtered value in float type
+
+  Function takes a value and makes sure it's between -1 and 1,
+  as well as applying deadzone to cancel out near zero inputs.
+
+*/
 float joyFilter(float val) {
   float newval;
   newval = val;
@@ -35,12 +46,13 @@ float joyFilter(float val) {
 }
 
 void setup() {
+  //LoRa radio pin setup
   pinMode(RFM95_RST, OUTPUT);
   digitalWrite(RFM95_RST, HIGH);
 
   Serial.begin(115200);
-  Serial.print("Hello!");
 
+  //Controller code, if controller is a certain type, set it up properly.
   if (CONTROLLER == 0) {
     pinMode(BLINKER, OUTPUT);
     pinMode(joyXpin, INPUT);
@@ -84,35 +96,48 @@ void setup() {
 }
 
 void loop() {
-
-  if (CONTROLLER == 0) {
-    joyX = (analogRead(joyXpin)-500.0)/500.0;
-    joyY = -1*(analogRead(joyYpin)-500.0)/500.0;
-    modeSWout = digitalRead(modeSW);
-    if (modeSWout == 0) {
-      txStruct.mode += 1.0;
-      if (txStruct.mode > 1) {
+  // switch case that separates controller modes
+  // if 0, it uses the analog pin inputs
+  // if 1, it uses the nunchuck on i2c 
+  switch (CONTROLLER) {
+    case 0:
+      // read analog values from joystick and convert them 
+      // from analog to float from -1 to 1
+      joyX = (analogRead(joyXpin)-500.0)/500.0;
+      joyY = -1*(analogRead(joyYpin)-500.0)/500.0;
+      modeSWout = digitalRead(modeSW);
+      // changes drive mode when modeSW is high
+      if (modeSWout == 0) {
+        txStruct.mode += 1.0;
+        if (txStruct.mode > 1) {
+          txStruct.mode = 0.0;
+        }
+        //latching statement that stops code until button is released
+        while (modeSWout == 0) {
+          modeSWout = digitalRead(modeSW);
+        }
+      }
+      break;
+    case 1:
+      // read all values from nunchuck on i2c
+      nunchuck1.readData();
+      //nunchuck1.printInputs(); // debug statment
+      // export values from nunchuck and convert from 0 to 255
+      // into -1 to 1
+      joyX = -1*(nunchuck1.values[1]-126.0)/96;
+      joyY = (nunchuck1.values[0]-126.0)/96;
+      // check nunchuck z and c buttons
+      // 10 is z, 11 is c
+      if (nunchuck1.values[10] > 250) {
         txStruct.mode = 0.0;
       }
-      while (modeSWout == 0) {
-        modeSWout = digitalRead(modeSW);
+      else if (nunchuck1.values[11] > 250) {
+        txStruct.mode = 1.0;
       }
-    }
-  }
-  else if (CONTROLLER == 1) {
-    nunchuck1.readData();
-    //nunchuck1.printInputs();
-    joyX = -1*(nunchuck1.values[1]-126.0)/96;
-    joyY = (nunchuck1.values[0]-126.0)/96;
-    if (nunchuck1.values[10] > 250) {
-      txStruct.mode = 0.0;
-    }
-    else if (nunchuck1.values[11] > 250) {
-      txStruct.mode = 1.0;
-    }
+      break;
   }
 
-
+  // run gathered values from controller through filter
   joyX = joyFilter(joyX);
   joyY = joyFilter(joyY);
   /*
@@ -122,7 +147,10 @@ void loop() {
   Serial.println(joyY);
   */
 
+  // transfer final controller values into struct and send through LoRa
+  digitalWrite(BLINKER, HIGH);
   txStruct.drive = joyX;
   txStruct.steer = joyY;
   rf95.send((uint8_t *)&txStruct, sizeof(txStruct));
+  digitalWrite(BLINKER, LOW);
 }
