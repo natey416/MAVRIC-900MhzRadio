@@ -5,6 +5,12 @@ import pygame
 import sys
 from pySerialTransfer import pySerialTransfer as txfer
 
+# THIS CODE IS A NIGHTMARE
+# I won't be commenting this due to it not being used in our final version
+# to look at how it actually works, it's much better to look at 
+# baseStationSimple.py
+# That code is a lot better to look at.
+
 # first attempt
 # https://projecthub.arduino.cc/ansh2919/serial-communication-between-python-and-arduino-663756
 

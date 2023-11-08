@@ -1,3 +1,9 @@
+'''
+THIS CODE IS NOT ACTIVELY UPDATED
+THIS CODE IS FOR TESTING ONLY
+IT MAY NOT WORK WITH CURRENT RECIEVER CODE
+'''
+
 import time
 from pySerialTransfer import pySerialTransfer as txfer
 
@@ -28,7 +34,10 @@ if __name__=='__main__':
         Loop = True
 
         while Loop:
-            if link.available():
+            if link.available():    # read all values from serial
+                # This works by reading from the beginning of serial data line,
+                # then advancing the "cursor" to after the read data and starting
+                # the next reading data at the current cursor position
                 recSize = 0
 
                 dataRX.drive = link.rx_obj(obj_type='f', start_pos=recSize)
@@ -39,7 +48,8 @@ if __name__=='__main__':
 
                 dataRX.mode = link.rx_obj(obj_type='f', start_pos=recSize)
                 recSize += txfer.STRUCT_FORMAT_LENGTHS['f']
-            elif link.status < 0:
+            
+            elif link.status < 0:   # check link errors
                 if link.status == txfer.CRC_ERROR:
                     print('ERROR: CRC_ERROR')
                 elif link.status == txfer.PAYLOAD_ERROR:
@@ -48,6 +58,8 @@ if __name__=='__main__':
                     print('ERROR: STOP_BYTE_ERROR')
                 else:
                     print('ERROR: {}'.format(link.status))
+
+            # clean up data and make sure it's within deadzone and rounded to 2 decimal places
             dataRX.drive = round(dataRX.drive, 2)
             dataRX.steer = round(dataRX.steer, 2)
             if abs(dataRX.drive) < deadzone:
@@ -57,4 +69,4 @@ if __name__=='__main__':
             print("Drive: {}    Steer: {}    Mode: {}".format(dataRX.drive,dataRX.steer,dataRX.mode))
     except KeyboardInterrupt:
         link.close()
-        Loop = False
+        Loop = False    # stop loop
